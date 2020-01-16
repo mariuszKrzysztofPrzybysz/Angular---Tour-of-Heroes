@@ -6,6 +6,7 @@ import { catchError, map, tap } from 'rxjs/operators';
 import { Hero } from './hero';
 import { MessageService } from './message.service';
 import { InMemoryDataService } from './in-memory-data.service';
+import { timingSafeEqual } from 'crypto';
 
 @Injectable({
   providedIn: 'root'
@@ -70,6 +71,21 @@ export class HeroService {
       .pipe(
         tap(__dirname => this.log(`deleted hero id=${id}`)),
         catchError(this.handleError<Hero>('deletedHero'))
+      );
+  }
+
+  /* GET heroes whose name contains search term */
+  searchHeroes(term: string): Observable<Hero[]> {
+    if (!term.trim()) {
+      // if not search term, return empty hero array.
+      return of([]);
+    }
+
+    const url = `${this.heroesUrl}/?name=${term}`;
+    return this.http.get<Hero[]>(url)
+      .pipe(
+        tap(_ => this.log(`found heroes matching "${term}"`)),
+        catchError(this.handleError<Hero[]>('searchHeroes', []))
       );
   }
 
